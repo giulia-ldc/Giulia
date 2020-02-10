@@ -1,0 +1,62 @@
+# Libraries
+import numpy as np 
+import pandas as pd
+from sklearn import preprocessing
+import os
+import matplotlib.pyplot as plt
+from sklearn import metrics, model_selection, preprocessing
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
+from matplotlib.legend_handler import HandlerLine2D
+import matplotlib.pyplot as plt
+from sklearn import datasets, linear_model
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix
+from sklearn.tree import export_graphviz
+from sklearn.externals.six import StringIO 
+from IPython.display import Image 
+from pydot import graph_from_dot_data
+import pandas as pd
+import numpy as np
+# Load dataset
+data = "/Users/glodico/Documents/pH_norm.xlsx"
+headers = ["num", "%sep", "%restoclay", "Quartz", "%Dolomite", "%Calcite", "%Feldspato", "%Opalos", "Fluorapatito", "Type", "Al/Si", "Mg/Si", "Al/Mg", "Si+Ti", "SiO2", "Al2O3", "MgO", "CaO", "Fe2O3", "Na2O", "K2O", "TiO2", "Mn2O3", "Loss by calcination", "CIC", "BET", "pH0", "pH24", "Cl", "Starting humidity", "Free acidity", "Free pH", "pKa1", "pKa2", "pKa3", "C", "H", "O", "P", "S", "N", "Double bounds", "PM", "XlogP3", "H-donor", "H- Acceptor", "Rotable bond", "Polar surface", "Complexity", "Activation", "Milling", "Size", "Final humidity", "Dosage", "Acid/Clay", "Acid(M)", "H20/Clay", "pH filtrato", "Final pH", "Final BET", "Final CIC", "pH Class", "Final pH0 Class"]
+df = pd.read_excel(data, names=headers)
+# Model pH
+X = df[["Size", "Activation", "Milling", "Acid(M)", "Acid/Clay", "Final humidity", "Starting humidity", "Al/Si", "Mg/Si", "Al/Mg", "Si+Ti", "%sep", "%restoclay","Quartz", "%Dolomite", "%Calcite", "Type","CIC", "BET", "pH0", "pH24", "Free pH", "SiO2", "Al2O3", "MgO", "CaO", "Fe2O3", "Na2O", "K2O", "TiO2", "Mn2O3", "Loss by calcination", "pKa3", "pKa2", "pKa1", "C", "H", "O", "P", "S", "N", "Double bounds", "PM", "XlogP3", "H-donor", "H- Acceptor", "Rotable bond", "Polar surface"]].values
+y = df[["pH filtrato"]]
+
+X_trainset, X_testset, y_trainset, y_testset = train_test_split(X, y, test_size=0.3, random_state=110)
+model = DecisionTreeRegressor(random_state=42, max_features=4, min_samples_leaf=1, max_depth=889)
+model.fit(X_trainset, y_trainset.values.ravel())
+y_pred = model.predict(X_testset)	
+y_predtrain = model.predict(X_trainset)
+
+r2_score(y_testset, y_pred)
+print(mean_squared_error(y_testset, y_pred))
+print(mean_absolute_error(y_testset, y_pred))
+print(model.score(X_testset, y_testset))
+print(model.score(X_trainset, y_trainset))
+feature = model.feature_importances_
+
+regr = linear_model.LinearRegression()
+regr.fit(y_testset, y_pred)
+coef = regr.coef_
+inter = regr.intercept_
+line = coef*y_testset+inter
+line1 = plt.plot(y_predtrain/10, y_trainset/10, "o", color="blue", label="Training data")
+line2 = plt.plot(y_pred/10,  y_testset/10, "o", color='red', label="Testing data")
+plt.legend(numpoints=1, fontsize=14)
+plt.xlabel("Predictions (R)", fontsize=24)
+plt.ylabel("Experiments (R)", fontsize=24)
+plt.tick_params(axis="both", labelsize=16)
+plt.show()
+
+#Tree Visualization
+dot_data = StringIO()
+Feat_names = ["Size", "Activation", "Milling", "Acid(M)", "Acid/Clay", "Final humidity", "Starting humidity", "Al/Si", "Mg/Si", "Al/Mg", "Si+Ti", "%sep", "%restoclay","Quartz", "%Dolomite", "%Calcite", "Type","CIC", "BET", "pH0", "pH24", "Free pH", "SiO2", "Al2O3", "MgO", "CaO", "Fe2O3", "Na2O", "K2O", "TiO2", "Mn2O3", "Loss by calcination", "pKa3", "pKa2", "pKa1", "C", "H", "O", "P", "S", "N", "Double bounds", "PM", "XlogP3", "H-donor", "H- Acceptor", "Rotable bond", "Polar surface"]
+export_graphviz(model, out_file=dot_data, feature_names=Feat_names)
+(graph, ) = graph_from_dot_data(dot_data.getvalue())
+Image(graph.create_png())
